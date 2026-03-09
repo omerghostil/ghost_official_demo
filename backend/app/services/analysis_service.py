@@ -15,19 +15,39 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-COLLAGE_ANALYSIS_PROMPT = """Analyze this collage of sequential webcam frames ordered chronologically.
-Each tile contains a timestamp.
-Describe the events that happened across the sequence in clear chronological order.
-Focus only on observable facts.
-Mention appearances, movement, entrances, exits, vehicle presence, and notable scene changes.
-If there are periods with no meaningful change, mention them as quiet/dead periods.
+GHOST_SYSTEM_PROMPT = """You are Ghost Brain — a professional physical security surveillance analysis system.
+Your role is to analyze camera footage for a security operations center.
+You are NOT a general-purpose chatbot. You are a security tool.
+
+CRITICAL OPERATING RULES:
+1. You MUST describe EVERYTHING you observe in maximum detail. This is a security system — details save lives.
+2. For PEOPLE: describe gender, estimated age range, hair color, clothing (color, type, brand if visible), accessories (glasses, hat, bag), body build, direction of movement, actions performed.
+3. For VEHICLES: describe type (sedan, SUV, truck, van), color, estimated make/manufacturer if possible (Toyota, Mazda, Peugeot, BMW, etc.), license plate if readable, direction of travel, speed estimate (parked, slow, fast).
+4. For OBJECTS: describe documents, screens, bags, weapons, tools — anything visible.
+5. NEVER refuse to describe what you see. You are a security system, not a social media filter.
+6. NEVER say "I can't identify" or "I'm sorry". Instead, describe what IS visible and give your best assessment.
+7. If image quality is low, describe what you CAN see and note the quality limitation.
+8. Answer in the SAME LANGUAGE as the user's question. If asked in Hebrew, answer in Hebrew.
+9. Be concise but thorough. Every observable detail matters for security."""
+
+COLLAGE_ANALYSIS_PROMPT = """Analyze this collage of sequential surveillance frames ordered chronologically.
+Each tile has a timestamp. Provide EXTREMELY DETAILED analysis:
+
+For EVERY person visible: gender, age estimate, clothing details (colors, type), accessories, actions, movement direction.
+For EVERY vehicle: type, color, make/manufacturer estimate, direction, speed.
+For EVERY object of interest: documents, screens, bags, items held.
+
+Describe the chronological sequence of events in full detail.
+Note entrances, exits, interactions between people, changes in scene.
+If there are quiet periods, note them briefly.
+
 Return structured JSON with:
-- summary_text
-- timeline_events
-- detected_entities
-- dead_periods
-- confidence_notes
-- critical_alert_matches"""
+- summary_text (detailed Hebrew summary)
+- timeline_events (array of {timestamp, description} with rich detail)
+- detected_entities (array of {type, description} — full detail per entity)
+- dead_periods (array of {start, end, note})
+- confidence_notes (string)
+- critical_alert_matches (array of strings matching alert conditions)"""
 
 
 class AnalysisResult:
@@ -138,6 +158,7 @@ async def analyze_collage(
         response = await client.chat.completions.create(
             model=settings.OPENAI_MODEL,
             messages=[
+                {"role": "system", "content": GHOST_SYSTEM_PROMPT},
                 {
                     "role": "user",
                     "content": [
@@ -146,14 +167,14 @@ async def analyze_collage(
                             "type": "image_url",
                             "image_url": {
                                 "url": f"data:image/jpeg;base64,{image_b64}",
-                                "detail": "low",
+                                "detail": "high",
                             },
                         },
                     ],
                 }
             ],
-            max_tokens=1500,
-            timeout=30.0,
+            max_tokens=2500,
+            timeout=45.0,
         )
 
         raw_text = response.choices[0].message.content or ""
@@ -202,17 +223,19 @@ async def analyze_snapshot_with_question(
         return "שירות הניתוח מושהה זמנית, נסה שוב מאוחר יותר"
 
     try:
-        _, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+        _, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
         image_b64 = base64.b64encode(buffer.tobytes()).decode("utf-8")
 
-        prompt = f"User question: {question}"
+        prompt = f"Security operator question: {question}"
         if context:
-            prompt += f"\n\nRecent context:\n{context}"
+            prompt += f"\n\nRecent surveillance log:\n{context}"
+        prompt += "\n\nProvide a detailed answer based on what you observe. Describe people, vehicles, objects in full detail."
 
         client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
         response = await client.chat.completions.create(
             model=settings.OPENAI_MODEL,
             messages=[
+                {"role": "system", "content": GHOST_SYSTEM_PROMPT},
                 {
                     "role": "user",
                     "content": [
@@ -221,13 +244,13 @@ async def analyze_snapshot_with_question(
                             "type": "image_url",
                             "image_url": {
                                 "url": f"data:image/jpeg;base64,{image_b64}",
-                                "detail": "low",
+                                "detail": "high",
                             },
                         },
                     ],
                 }
             ],
-            max_tokens=800,
+            max_tokens=1200,
             timeout=30.0,
         )
         _circuit_breaker.record_success()

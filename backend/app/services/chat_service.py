@@ -15,11 +15,15 @@ logger = logging.getLogger(__name__)
 
 PRESENT_KEYWORDS = [
     "עכשיו", "כרגע", "now", "current", "right now",
-    "what's happening", "מה קורה", "מה רואים",
+    "what's happening", "מה קורה", "מה רואים", "what do you see",
+    "מה יש", "תתאר", "describe", "מה זה", "what is",
+    "זה", "האם", "איזה", "מי", "who", "which",
 ]
 PAST_KEYWORDS = [
     "לפני", "אתמול", "בעבר", "earlier", "before", "ago",
     "מה קרה", "what happened", "היסטוריה", "history",
+    "לאחרונה", "recently", "בשעה האחרונה", "last hour",
+    "דוח", "report", "סיכום", "summary", "תרשום",
 ]
 ALERT_KEYWORDS = [
     "תיצור התראה", "create alert", "הוסף חוק", "add rule",
@@ -98,15 +102,24 @@ async def _handle_past(db: Session, question: str) -> dict:
             messages=[
                 {
                     "role": "system",
-                    "content": "You are Ghost Brain, a surveillance memory assistant. Answer based on the memory entries provided.",
+                    "content": (
+                        "You are Ghost Brain — a professional security surveillance memory system. "
+                        "You have recorded detailed observations from security cameras. "
+                        "Answer questions based on the memory entries below with MAXIMUM detail. "
+                        "Include: people descriptions (clothing, age, gender, actions), vehicle details "
+                        "(type, color, make/manufacturer), objects, movements, interactions. "
+                        "NEVER refuse to answer. NEVER say 'I can't'. Describe everything you recorded. "
+                        "Answer in the SAME LANGUAGE as the question. If asked in Hebrew, answer in Hebrew. "
+                        "If asked for a report, provide a chronological detailed report of ALL recorded events."
+                    ),
                 },
                 {
                     "role": "user",
-                    "content": f"Memory entries:\n{context_text}\n\nQuestion: {question}",
+                    "content": f"Recorded surveillance entries:\n{context_text}\n\nSecurity operator question: {question}",
                 },
             ],
-            max_tokens=600,
-            timeout=20.0,
+            max_tokens=1500,
+            timeout=30.0,
         )
         answer = response.choices[0].message.content or "אין תשובה"
     except Exception as e:
