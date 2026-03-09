@@ -112,6 +112,27 @@ export interface StorageHealth {
   total_size_mb: number;
 }
 
+export interface WatchTask {
+  id: number;
+  label: string;
+  description: string;
+  is_enabled: boolean;
+  days_of_week: string;
+  start_time: string;
+  end_time: string;
+  cooldown_seconds: number;
+  total_matches: number;
+  last_match_at: string | null;
+}
+
+export interface WatchTaskEvent {
+  id: number;
+  task_id: number;
+  match_description: string;
+  confidence: string;
+  created_at: string;
+}
+
 export const api = {
   login: (username: string, password: string) =>
     client.post<LoginResponse>('/auth/login', { username, password }),
@@ -153,6 +174,15 @@ export const api = {
   deleteUser: (id: number) => client.delete(`/admin/users/${id}`),
   resetPassword: (id: number, new_password: string) =>
     client.post(`/admin/users/${id}/reset-password`, { new_password }),
+
+  getWatchTasks: () => client.get<WatchTask[]>('/watch-tasks/'),
+  createWatchTask: (data: { label: string; description: string; days_of_week: string; start_time: string; end_time: string; cooldown_seconds: number }) =>
+    client.post<WatchTask>('/watch-tasks/', data),
+  updateWatchTask: (id: number, data: Partial<WatchTask>) =>
+    client.patch<WatchTask>(`/watch-tasks/${id}`, data),
+  deleteWatchTask: (id: number) => client.delete(`/watch-tasks/${id}`),
+  getWatchTaskEvents: (limit?: number) =>
+    client.get<WatchTaskEvent[]>('/watch-tasks/events', { params: { limit: limit || 20 } }),
 };
 
 export default api;

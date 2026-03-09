@@ -16,6 +16,7 @@ from app.services.detection_service import detection_service, DetectionResult
 from app.services.significant_change import is_significant_change
 from app.services.collage_service import create_collage
 from app.services.journal_service import log_event
+from app.services.watch_task_service import get_active_tasks_now, check_frame_against_tasks
 from app.workers.base_worker import BaseWorker
 
 logger = logging.getLogger(__name__)
@@ -74,6 +75,8 @@ class MemoryWorker(BaseWorker):
             "buffer_size": len(self._buffer),
         })
 
+        await self._check_watch_tasks(frame, str(frame_path))
+
         if len(self._buffer) >= settings.COLLAGE_FRAME_COUNT:
             await self._create_collage()
 
@@ -131,3 +134,13 @@ class MemoryWorker(BaseWorker):
 
         self._buffer.clear()
         logger.info(f"קולאז' נוצר: {collage_path}")
+
+    async def _check_watch_tasks(self, frame: np.ndarray, frame_path: str) -> None:
+        """בדיקת פריים מול משימות ניטור פעילות."""
+        try:
+            active_tasks = get_active_tasks_now()
+            if not active_tasks:
+                return
+            await check_frame_against_tasks(frame, frame_path, active_tasks)
+        except Exception as e:
+            logger.error(f"שגיאה בבדיקת משימות ניטור: {e}")

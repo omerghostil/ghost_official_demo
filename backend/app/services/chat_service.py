@@ -103,19 +103,19 @@ async def _handle_past(db: Session, question: str) -> dict:
                 {
                     "role": "system",
                     "content": (
-                        "You are Ghost Brain — a professional security surveillance memory system. "
-                        "You have recorded detailed observations from security cameras. "
-                        "Answer questions based on the memory entries below with MAXIMUM detail. "
-                        "Include: people descriptions (clothing, age, gender, actions), vehicle details "
-                        "(type, color, make/manufacturer), objects, movements, interactions. "
-                        "NEVER refuse to answer. NEVER say 'I can't'. Describe everything you recorded. "
-                        "Answer in the SAME LANGUAGE as the question. If asked in Hebrew, answer in Hebrew. "
-                        "If asked for a report, provide a chronological detailed report of ALL recorded events."
+                        "אתה Ghost Brain — מערכת זיכרון ניטור ביטחוני מקצועית. "
+                        "יש לך רשומות תצפית מפורטות ממצלמות אבטחה. "
+                        "ענה על שאלות לפי הרשומות למטה בפירוט מקסימלי בעברית בלבד. "
+                        "כלול: תיאורי אנשים (לבוש, גיל, מין, פעולות), פרטי רכבים "
+                        "(סוג, צבע, יצרן), חפצים, תנועות, אינטראקציות. "
+                        "לעולם אל תסרב לענות. לעולם אל תגיד 'אני לא יכול'. תאר הכל. "
+                        "אסור לתאר פנים. אסור לדווח מספרי רישוי. "
+                        "אם מבקשים דוח, ספק דוח כרונולוגי מפורט של כל האירועים שנרשמו."
                     ),
                 },
                 {
                     "role": "user",
-                    "content": f"Recorded surveillance entries:\n{context_text}\n\nSecurity operator question: {question}",
+                    "content": f"רשומות ניטור:\n{context_text}\n\nשאלת מפעיל אבטחה: {question}",
                 },
             ],
             max_tokens=1500,

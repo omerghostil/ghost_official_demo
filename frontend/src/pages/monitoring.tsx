@@ -7,6 +7,7 @@ import { StatusBar } from '../components/status-bar';
 import { ChatPanel } from '../components/chat-panel';
 import { AlertsPanel } from '../components/alerts-panel';
 import { MemoryPanel } from '../components/memory-panel';
+import { WatchTasksPanel } from '../components/watch-tasks-panel';
 
 export function MonitoringPage() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -76,8 +77,9 @@ export function MonitoringPage() {
         </div>
 
         {/* Side Panel - Right */}
-        <div className="flex flex-col" style={{ width: '340px' }}>
+        <div className="flex flex-col" style={{ width: '360px' }}>
           <div className="flex-1 overflow-y-auto">
+            <WatchTasksPanel />
             <AlertsPanel />
             <ChatPanel />
           </div>

@@ -87,6 +87,7 @@ from app.api.camera import router as camera_router
 from app.api.alerts import router as alerts_router
 from app.api.chat import router as chat_router
 from app.api.history import router as history_router
+from app.api.watch_tasks import router as watch_tasks_router
 
 app.include_router(auth_router)
 app.include_router(admin_router)
@@ -95,3 +96,4 @@ app.include_router(camera_router)
 app.include_router(alerts_router)
 app.include_router(chat_router)
 app.include_router(history_router)
+app.include_router(watch_tasks_router)

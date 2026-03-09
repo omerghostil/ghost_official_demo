@@ -8,6 +8,7 @@ from app.models.memory import (
 from app.models.alert import AlertRule, Alert
 from app.models.chat import ChatMessage
 from app.models.journal import EventJournal
+from app.models.watch_task import WatchTask, WatchTaskEvent
 
 __all__ = [
     "User", "Session",
@@ -16,4 +17,5 @@ __all__ = [
     "AlertRule", "Alert",
     "ChatMessage",
     "EventJournal",
+    "WatchTask", "WatchTaskEvent",
 ]
